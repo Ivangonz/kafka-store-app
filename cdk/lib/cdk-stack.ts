@@ -1,4 +1,6 @@
 import * as cdk from "@aws-cdk/core";
+import * as apiGateway from "@aws-cdk/aws-apigatewayv2";
+import * as apiIntegrations from "@aws-cdk/aws-apigatewayv2-integrations";
 import { RemovalPolicy } from "@aws-cdk/core";
 import {
   AttributeType,
@@ -28,14 +30,26 @@ export class KafkaStoreAppStack extends cdk.Stack {
       removalPolicy: RemovalPolicy.RETAIN,
     });
 
-    const sampleFunction = new NodejsFunction(this, "SampleFunction", {
+    const orderImport = new NodejsFunction(this, "OrderConsumer", {
       runtime: Runtime.NODEJS_14_X,
-      handler: "handler",
-      entry: join(__dirname, "../../src/sample-lambda.ts"),
+      handler: "post",
+      entry: join(__dirname, "../../src/order-import-consumer.ts"),
       bundling: {
         target: "node14",
         externalModules: ["aws-sdk"],
       },
     });
+
+    const orderApi = new apiGateway.HttpApi(this, "OrderImportApi");
+    new cdk.CfnOutput(this, "ApiUrl", { value: orderApi.url! });
+    orderApi.addRoutes({
+      path: "api/order/import",
+      methods: [apiGateway.HttpMethod.POST],
+      integration: new apiIntegrations.LambdaProxyIntegration({
+        handler: orderImport,
+      }),
+    });
+
+    orderTable.grantWriteData(orderImport);
   }
 }

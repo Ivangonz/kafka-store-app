@@ -1,7 +1,7 @@
 module.exports = {
   testEnvironment: "node",
   roots: ["<rootDir>/test"],
-  testMatch: ["**/*.sample-lambda.ts"],
+  testMatch: ["**/*.order-import-consumer.ts"],
   transform: {
     "^.+\\.tsx?$": "ts-jest",
   },
